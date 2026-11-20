@@ -1,0 +1,1057 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Supercity Drive</title>
+<style>
+:root{--panel:rgba(9,12,26,.93);--line:#2f3a63;--txt:#e9edff;--dim:#8d97c2;--acc:#ffcc33;--cy:#35e0ff;--bad:#ff5470;--ok:#3be08a}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;color:var(--txt);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+body{display:flex;align-items:center;justify-content:center}
+#stage{position:relative;width:960px;height:540px;overflow:hidden;background:#000;user-select:none;-webkit-user-select:none;font-size:16px}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:crisp-edges;image-rendering:pixelated}
+
+/* screens */
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(4,6,16,.55)}
+.panel{background:var(--panel);border:.125em solid var(--line);border-radius:.6em;padding:1.3em 1.7em;box-shadow:0 0 3em rgba(0,0,0,.6)}
+h1{margin:0 0 .3em;font-size:2.2em;letter-spacing:.12em;color:var(--acc);text-shadow:0 0 .6em rgba(255,204,51,.45);text-align:center}
+h1 small{color:var(--cy);font-size:.5em;letter-spacing:.45em;display:block;text-shadow:none}
+h2{margin:0;font-size:1.4em;letter-spacing:.1em;color:var(--cy)}
+.dim{color:var(--dim)}.small{font-size:.75em}.gold{color:var(--acc)}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.btn{font:inherit;background:#1a2244;color:var(--txt);border:.1em solid var(--line);border-radius:.4em;padding:.6em 1em;cursor:pointer;letter-spacing:.06em}
+.btn:hover:not(:disabled){background:#243060}
+.btn.pri{background:var(--acc);color:#1a1300;border-color:var(--acc);font-weight:700}
+.btn.pri:hover:not(:disabled){background:#ffd966}
+.btn.ghost{background:transparent}
+.btn.big{font-size:1.5em;padding:.5em 1em;width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+input{font:inherit;background:#0c1022;color:var(--txt);border:.1em solid var(--line);border-radius:.4em;padding:.6em .8em;width:100%}
+input:focus{outline:none;border-color:var(--cy)}
+.tabs{display:flex;gap:.4em;margin:.5em 0 .8em}
+.tab{flex:1;font:inherit;background:transparent;color:var(--dim);border:0;border-bottom:.15em solid var(--line);padding:.5em;cursor:pointer}
+.tab.on{color:var(--cy);border-color:var(--cy)}
+.msg{min-height:1.4em;margin:.6em 0;color:var(--bad);font-size:.85em;text-align:center}
+.who{font-size:1.2em;margin:.2em 0}
+.row2{display:flex;justify-content:space-between;margin:.3em 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5em;margin:.7em 0}
+.top{display:flex;align-items:center;justify-content:space-between;gap:1em;margin-bottom:.8em}
+.wide{width:56em;max-width:96%}
+
+/* garage */
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.6em}
+.card{background:#0d1230;border:.1em solid var(--line);border-radius:.4em;padding:.5em;display:flex;flex-direction:column;gap:.25em}
+.card.sel{border-color:var(--acc);box-shadow:0 0 .8em rgba(255,204,51,.3)}
+.card canvas{width:100%;aspect-ratio:96/54;image-rendering:pixelated;border-radius:.25em}
+.cn{font-size:.72em;font-weight:700;min-height:2.1em;line-height:1.05}
+.cs{font-size:.6em;color:var(--dim)}
+.st{display:flex;align-items:center;gap:.4em;font-size:.58em;color:var(--dim)}
+.st span{width:2.4em}.st i{flex:1;height:.55em;background:#1a2244;border-radius:.2em;overflow:hidden}.st u{display:block;height:100%;background:var(--cy)}
+.card .btn{font-size:.62em;padding:.5em .3em;margin-top:auto}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;margin:.6em 0;font-size:.9em}
+.tbl td{padding:.28em .2em;border-bottom:.06em solid #1f2850}
+.tbl td:last-child{text-align:right}
+.tbl tr.you td{color:var(--acc);font-weight:700}
+.tbl tr.cpu td:nth-child(2){color:var(--dim)}
+.tbl tr.tot td{font-weight:700;color:var(--acc);border-bottom:0;font-size:1.1em}
+.tbl th{text-align:left;color:var(--dim);font-weight:400;font-size:.8em;padding:.2em}
+.big2{font-size:3em;text-align:center;color:var(--acc);line-height:1.1;margin-top:.2em}
+.big2 small{display:block;font-size:.25em;color:var(--dim);letter-spacing:.3em}
+.badge{text-align:center;color:#1a1300;background:var(--ok);border-radius:.3em;padding:.2em;font-weight:700;margin:.4em 0}
+.medal{text-align:center;font-weight:700;letter-spacing:.15em;margin:.3em 0}
+
+/* casino */
+.casino{width:30em;text-align:center}
+.bal{font-size:1.1em;margin:.4em 0}
+.coinbox{height:7em;display:flex;align-items:center;justify-content:center;perspective:30em}
+.coin{width:5.2em;height:5.2em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a0,#e0a800 70%);border:.25em solid #b8860b;display:flex;align-items:center;justify-content:center;font-size:1.6em;color:#7a5600;font-weight:700}
+.coin.spin{animation:flip 1.2s ease-in-out}
+@keyframes flip{0%{transform:rotateY(0) translateY(0)}50%{transform:rotateY(900deg) translateY(-1.2em)}100%{transform:rotateY(1800deg) translateY(0)}}
+.res{min-height:1.8em;font-size:1.3em;font-weight:700}
+.chips{display:flex;gap:.4em;margin:.5em 0}
+.chips .btn{flex:1;padding:.4em}
+
+/* HUD */
+#hud{position:absolute;inset:0;pointer-events:none;text-shadow:0 .1em .25em #000}
+#hud b{font-weight:700}
+.tl{position:absolute;left:1em;top:.7em;font-size:1.15em;line-height:1.5}
+.tr{position:absolute;right:1em;top:.7em;font-size:.95em;line-height:1.5;text-align:right}
+.bl{position:absolute;left:1em;bottom:.8em;font-size:.8em;color:#cdd5ff}
+#hTime{font-size:1.4em}#hTime.low{color:var(--bad)}
+#hCombo{color:var(--ok);min-height:1.5em}
+#speedo{position:absolute;right:1em;bottom:.8em;text-align:right;background:rgba(6,8,20,.72);border:.1em solid var(--line);border-radius:.5em;padding:.4em .9em .55em;min-width:9.5em}
+#speedo .gear{font-size:.8em;color:var(--dim);text-align:left}
+#hSpd{font-size:3.3em;line-height:1;color:var(--acc);font-variant-numeric:tabular-nums}
+#speedo i{font-style:normal;font-size:.9em;color:var(--dim);margin-left:.3em}
+.rpm{height:.5em;background:#1a2244;border-radius:.25em;overflow:hidden;margin-top:.3em}
+#hRpm{height:100%;width:0;background:linear-gradient(90deg,var(--cy),var(--acc),var(--bad))}
+#toast{position:absolute;left:0;right:0;top:24%;text-align:center;font-size:1.7em;font-weight:700;opacity:0;color:var(--acc)}
+#toast.ok{color:var(--ok)}#toast.bad{color:var(--bad)}
+#big{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:6em;font-weight:700;color:#fff;text-shadow:0 0 .3em var(--cy)}
+#touch{position:absolute;inset:0;pointer-events:none}
+#touch button{position:absolute;pointer-events:auto;font:inherit;font-size:1.6em;width:3em;height:3em;border-radius:50%;background:rgba(20,28,60,.6);color:#fff;border:.08em solid var(--line);touch-action:none}
+#touch [data-k=left]{left:1em;bottom:1em}#touch [data-k=right]{left:5em;bottom:1em}
+#touch [data-k=up]{right:1em;bottom:8.4em}#touch [data-k=down]{right:5em;bottom:8.4em;font-size:1.2em}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv" width="640" height="360"></canvas>
+  <div id="hud" hidden>
+    <div class="tl"><div>TIME <b id="hTime">45</b></div><div>SCORE <b id="hScore">0</b></div></div>
+    <div class="tr"><div id="hCombo"></div><div>BEST <b id="hBest">0</b></div><div>TRIP <b id="hDist">0.0</b> km</div></div>
+    <div class="bl" id="hCar"></div>
+    <div id="speedo">
+      <div class="gear">GEAR <b id="hGear">1</b></div>
+      <div><b id="hSpd">0</b><i>km/h</i></div>
+      <div class="rpm"><div id="hRpm"></div></div>
+    </div>
+    <div id="toast"></div>
+    <div id="big"></div>
+  </div>
+  <div id="touch" hidden>
+    <button data-k="left">&#9664;</button><button data-k="right">&#9654;</button>
+    <button data-k="up">GAS</button><button data-k="down">BRK</button>
+  </div>
+  <div id="ui"></div>
+</div>
+
+<script>
+/* =====================================================================
+   SUPERCITY DRIVE
+   Pseudo-3D racer. Everything lives in this one file.
+   Storage layer (DB / accounts / leaderboard) is local to this browser.
+   To make the leaderboard global, swap saveDB()/db for a backend
+   (Supabase, Firebase, your own API) -- nothing else needs to change.
+   ===================================================================== */
+
+/* ---------- constants ---------- */
+const W = 640, H = 360;
+const SEG = 200, RW = 2200, LANES = 3, DRAW = 220, CAMH = 1400, FOV = 100;
+const CAMD = 1 / Math.tan(FOV / 2 * Math.PI / 180);
+const PLAYERZ = CAMH * CAMD;
+const CARW = RW * 0.26;
+const U_PER_M = 144;                 // world units per metre (40 u per km/h * 3.6)
+const CP_M = 1500, CP_U = CP_M * U_PER_M, CP_BONUS = 20, START_TIME = 45;
+
+const MEDALS = [
+  { n: 'GOLD',   s: 10000, b: 4000, c: '#ffd24a' },
+  { n: 'SILVER', s: 6000,  b: 1500, c: '#cfd6e6' },
+  { n: 'BRONZE', s: 3000,  b: 500,  c: '#d98a4e' }
+];
+
+/* ---------- cars (approximate real-world figures) ---------- */
+const CARS = [
+  { id: 'gt3rs',    name: 'Porsche 911 GT3 RS',            top: 296, z100: 3.2, acc: 8,  hnd: 9,  price: 0,      color: '#f2c230', wing: 2, wide: .96, cab: 1.0,  h: 1.0,  bar: true },
+  { id: 'fordgt',   name: 'Ford GT',                       top: 348, z100: 3.0, acc: 8,  hnd: 8,  price: 6000,   color: '#2a62d9', wing: 1, wide: 1.0,  cab: .9,   h: 1.0 },
+  { id: 'amggt',    name: 'Mercedes-AMG GT Black Series',  top: 325, z100: 3.2, acc: 8,  hnd: 8,  price: 12000,  color: '#8b9099', wing: 2, wide: .98,  cab: 1.0,  h: 1.05 },
+  { id: '720s',     name: 'McLaren 720S',                  top: 341, z100: 2.9, acc: 9,  hnd: 9,  price: 20000,  color: '#ff7a1a', wing: 1, wide: .98,  cab: .9,   h: .95 },
+  { id: 'sf90',     name: 'Ferrari SF90 Stradale',         top: 340, z100: 2.5, acc: 10, hnd: 9,  price: 32000,  color: '#d9232d', wing: 1, wide: 1.0,  cab: .85,  h: .95 },
+  { id: 'revuelto', name: 'Lamborghini Revuelto',          top: 350, z100: 2.5, acc: 10, hnd: 9,  price: 48000,  color: '#7ed321', wing: 0, wide: 1.03, cab: .8,   h: .9,  bar: true },
+  { id: 'huayra',   name: 'Pagani Huayra',                 top: 370, z100: 3.3, acc: 9,  hnd: 9,  price: 70000,  color: '#c9d1d9', wing: 0, wide: .98,  cab: .95,  h: 1.0 },
+  { id: 'valkyrie', name: 'Aston Martin Valkyrie',         top: 350, z100: 2.5, acc: 10, hnd: 10, price: 100000, color: '#0f7a58', wing: 1, wide: 1.03, cab: .75,  h: .9 },
+  { id: 'chiron',   name: 'Bugatti Chiron',                top: 420, z100: 2.4, acc: 10, hnd: 8,  price: 150000, color: '#1f4fd8', wing: 1, wide: 1.0,  cab: 1.0,  h: 1.05, bar: true },
+  { id: 'jesko',    name: 'Koenigsegg Jesko',              top: 480, z100: 2.5, acc: 10, hnd: 9,  price: 220000, color: '#e8e8ea', wing: 2, wide: 1.0,  cab: .9,   h: .95 }
+];
+CARS.forEach(c => { c.max = 8000 + (c.top - 290) * 30; });
+const carById = id => CARS.find(c => c.id === id) || CARS[0];
+
+const TT = [ // traffic types
+  { color: '#c94b4b', h: 1,    cab: 1.15, wide: .9 },
+  { color: '#4b7bc9', h: 1.05, cab: 1.2,  wide: .92 },
+  { color: '#d9d9d9', h: 1,    cab: 1.1,  wide: .9 },
+  { color: '#e0b53a', h: 1,    cab: 1.1,  wide: .9 },
+  { color: '#3e9b6e', h: 1.1,  cab: 1.25, wide: .95 },
+  { color: '#8a5bc2', h: 1,    cab: 1.15, wide: .9 },
+  { color: '#e8e8ee', tall: 1, th: .95 },
+  { color: '#a56a3a', tall: 1, th: .8 }
+];
+const LANE = [{ o: -.667, v: 3000 }, { o: 0, v: 3800 }, { o: .667, v: 4600 }];
+
+const RIVALS = [
+  { name: 'ApexAnna',      score: 16800, car: 'jesko',    money: 310000 },
+  { name: 'NightShift',    score: 14200, car: 'chiron',   money: 190000 },
+  { name: 'DriftKing_88',  score: 11800, car: 'valkyrie', money: 120000 },
+  { name: 'MrTurbo',       score: 9400,  car: 'huayra',   money: 74000 },
+  { name: 'LapLegend',     score: 7600,  car: 'revuelto', money: 51000 },
+  { name: 'SunsetCruiser', score: 5900,  car: '720s',     money: 22000 },
+  { name: 'RookieRay',     score: 4100,  car: 'amggt',    money: 9000 },
+  { name: 'NewbieNick',    score: 2600,  car: 'gt3rs',    money: 2500 }
+];
+
+/* ---------- helpers ---------- */
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const easeIn = (a, b, p) => a + (b - a) * p * p;
+const easeInOut = (a, b, p) => a + (b - a) * (-Math.cos(p * Math.PI) / 2 + .5);
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const num = n => Math.round(n).toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function shade(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  const t = f < 0 ? 0 : 255, p = Math.abs(f);
+  r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b);
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+/* ---------- DOM ---------- */
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const stage = document.getElementById('stage'), ui = document.getElementById('ui'), hud = document.getElementById('hud');
+const touchEl = document.getElementById('touch');
+const el = id => document.getElementById(id);
+const hTime = el('hTime'), hScore = el('hScore'), hBest = el('hBest'), hDist = el('hDist'), hCombo = el('hCombo');
+const hCar = el('hCar'), hGear = el('hGear'), hSpd = el('hSpd'), hRpm = el('hRpm'), toastEl = el('toast'), bigEl = el('big');
+const q = s => ui.querySelector(s);
+const isTouch = (() => { try { return matchMedia('(pointer:coarse)').matches; } catch (e) { return false; } })();
+
+function fitStage() {
+  const w = Math.max(320, Math.min(innerWidth, innerHeight * 16 / 9));
+  stage.style.width = w + 'px';
+  stage.style.height = (w * 9 / 16) + 'px';
+  stage.style.fontSize = (w / 60) + 'px';
+}
+addEventListener('resize', fitStage);
+fitStage();
+
+/* ---------- audio ---------- */
+let actx = null, eng = null, muted = false;
+function audioInit() {
+  try {
+    if (!actx) {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = actx.createOscillator(), f = actx.createBiquadFilter(), g = actx.createGain();
+      o.type = 'sawtooth'; f.type = 'lowpass'; f.frequency.value = 600; g.gain.value = 0;
+      o.connect(f); f.connect(g); g.connect(actx.destination); o.start();
+      eng = { o, f, g };
+    }
+    if (actx.state === 'suspended') actx.resume();
+  } catch (e) {}
+}
+function engineSet(pitch, on) {
+  if (!eng) return;
+  try {
+    const t = actx.currentTime;
+    eng.o.frequency.setTargetAtTime(pitch, t, .05);
+    eng.f.frequency.setTargetAtTime(300 + pitch * 5, t, .1);
+    eng.g.gain.setTargetAtTime(muted || !on ? 0 : .045, t, .12);
+  } catch (e) {}
+}
+function beep(f, d, type, v, slide) {
+  if (muted) return;
+  try {
+    audioInit();
+    const o = actx.createOscillator(), g = actx.createGain(), now = actx.currentTime;
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(f, now);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), now + d);
+    g.gain.setValueAtTime(v || .05, now);
+    g.gain.exponentialRampToValueAtTime(.0001, now + d);
+    o.connect(g); g.connect(actx.destination); o.start(now); o.stop(now + d);
+  } catch (e) {}
+}
+
+/* ---------- storage / accounts ---------- */
+const mem = {};
+const LS = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return mem[k] === undefined ? null : mem[k]; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { mem[k] = v; } }
+};
+const DBK = 'supercity_db_v1', SESSK = 'supercity_session';
+let db = { users: {} };
+try { const raw = LS.get(DBK); if (raw) db = JSON.parse(raw); if (!db.users) db.users = {}; } catch (e) { db = { users: {} }; }
+function saveDB() { LS.set(DBK, JSON.stringify(db)); }
+
+function randHex(n) {
+  const a = new Uint8Array(n);
+  try { crypto.getRandomValues(a); } catch (e) { for (let i = 0; i < n; i++) a[i] = Math.floor(Math.random() * 256); }
+  return Array.from(a).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+async function hashPw(salt, pw) {
+  const s = salt + ':' + pw;
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+    return 'x' + (h >>> 0).toString(16);
+  }
+}
+function newUser(name, salt, hash) {
+  return { name, salt, hash, money: 1000, owned: ['gt3rs'], car: 'gt3rs', best: 0, bestCar: 'gt3rs', runs: 0, earned: 0, cWins: 0, cLosses: 0, cNet: 0, created: Date.now() };
+}
+async function register(name, pw) {
+  name = (name || '').trim();
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) return { err: 'Username: 3-16 letters, numbers or _' };
+  if ((pw || '').length < 4) return { err: 'Password must be at least 4 characters' };
+  const low = name.toLowerCase();
+  if (Object.keys(db.users).some(k => k.toLowerCase() === low) || RIVALS.some(r => r.name.toLowerCase() === low))
+    return { err: 'That username is taken' };
+  const salt = randHex(8);
+  const u = newUser(name, salt, await hashPw(salt, pw));
+  db.users[name] = u; saveDB(); LS.set(SESSK, name);
+  return { user: u };
+}
+async function login(name, pw) {
+  name = (name || '').trim();
+  const k = Object.keys(db.users).find(x => x.toLowerCase() === name.toLowerCase());
+  if (!k) return { err: 'No account with that username' };
+  const u = db.users[k];
+  if ((await hashPw(u.salt, pw || '')) !== u.hash) return { err: 'Wrong password' };
+  LS.set(SESSK, k);
+  return { user: u };
+}
+function guestUser() {
+  return { name: 'Guest', guest: true, money: 0, owned: ['gt3rs'], car: 'gt3rs', best: 0, bestCar: 'gt3rs', runs: 0, earned: 0, cWins: 0, cLosses: 0, cNet: 0 };
+}
+let user = null;
+function saveUser() { if (user && !user.guest) { db.users[user.name] = user; saveDB(); } }
+
+function leaderboard(kind) {
+  const rows = [];
+  for (const u of Object.values(db.users)) rows.push({ name: u.name, score: u.best || 0, car: u.bestCar, money: u.money, you: !!user && !user.guest && user.name === u.name });
+  for (const r of RIVALS) rows.push({ name: r.name, score: r.score, car: r.car, money: r.money, cpu: true });
+  const key = kind === 'money' ? 'money' : 'score';
+  return rows.filter(r => r[key] > 0).sort((a, b) => b[key] - a[key]);
+}
+
+/* ---------- track ---------- */
+let segs = [], TL = 0, cars = [];
+const ZC = {
+  city: { g: ['#2a3050', '#262c4a'], w: '#4a5278' },
+  down: { g: ['#30294d', '#2b2447'], w: '#52497a' },
+  sub:  { g: ['#2e6a3c', '#2a6236'], w: null }
+};
+const ROAD = ['#6d717f', '#656977'], RUMB = ['#e8e8f0', '#d12b45'];
+
+const mkP = (y, z) => ({ world: { y, z }, camera: { x: 0, y: 0, z: 0 }, screen: { x: 0, y: 0, w: 0, scale: 0 } });
+const lastY = () => segs.length ? segs[segs.length - 1].p2.world.y : 0;
+function addSeg(curve, y, zone) {
+  const n = segs.length;
+  segs.push({ index: n, p1: mkP(lastY(), n * SEG), p2: mkP(y, (n + 1) * SEG), curve, zone, st: Math.floor(n / 3) % 2, sprites: [], cars: [], clip: 0 });
+}
+function addRoad(enter, hold, leave, curve, y, zone) {
+  const startY = lastY(), endY = startY + y * SEG, total = enter + hold + leave;
+  for (let n = 0; n < enter; n++) addSeg(easeIn(0, curve, n / enter), easeInOut(startY, endY, n / total), zone);
+  for (let n = 0; n < hold; n++) addSeg(curve, easeInOut(startY, endY, (enter + n) / total), zone);
+  for (let n = 0; n < leave; n++) addSeg(easeInOut(curve, 0, n / leave), easeInOut(startY, endY, (enter + hold + n) / total), zone);
+}
+function R(n, curve, y, zone) { const e = Math.floor(n / 4); addRoad(e, n - 2 * e, e, curve, y, zone); }
+
+function buildTrack() {
+  segs = [];
+  R(120, 0, 0, 'city'); R(160, 2, 10, 'city'); R(140, 0, -10, 'city'); R(200, -3, 15, 'city');
+  R(120, 0, 0, 'city'); R(200, 3, -15, 'city'); R(160, -2, 0, 'city');
+  R(160, 0, 20, 'down'); R(200, 4, 0, 'down'); R(160, 0, -20, 'down'); R(200, -4, 10, 'down');
+  R(150, 0, 0, 'down'); R(180, 3, -10, 'down'); R(180, -3, 0, 'down');
+  R(200, 0, 25, 'sub'); R(200, -2, -25, 'sub'); R(240, 3, 15, 'sub'); R(160, 0, -15, 'sub');
+  R(220, -4, 10, 'sub'); R(160, 0, 0, 'sub');
+  R(200, 2, -10, 'city'); R(160, -3, 0, 'city');
+  addRoad(30, 30, 30, 0, -lastY() / SEG, 'city');       // bring the road back to ground level so it loops
+  TL = segs.length * SEG;
+}
+const segAt = z => segs[Math.floor(z / SEG) % segs.length];
+
+function populate() {
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const BC = ['#3a4666', '#4a3f66', '#2f5566', '#5b4a58', '#35405c', '#524a6e', '#2c3a50', '#6a4f5f', '#3d5a6a'];
+  const AC = ['#ff3d81', '#35e0ff', '#ffd23f', '#7cff6b'];
+  for (let n = 0; n < segs.length; n++) {
+    const s = segs[n];
+    if (s.zone !== 'sub') {
+      if (n % 5 === 0) for (const side of [-1, 1]) {
+        if (Math.random() < .9) {
+          const w = rand(1800, 3600), h = s.zone === 'down' ? rand(9000, 26000) : rand(4000, 13000);
+          s.sprites.push({
+            k: 'bld', side, offset: side * (1.4 + w / 2 / RW + rand(0, .6)), w, h, c: pick(BC),
+            acc: Math.random() < .3 ? pick(AC) : null, seed: Math.floor(Math.random() * 1e6),
+            fl: Math.max(2, Math.round(h / 1100)), cols: Math.max(2, Math.round(w / 700))
+          });
+        }
+      }
+    } else {
+      if (n % 4 === 0) for (const side of [-1, 1]) if (Math.random() < .8)
+        s.sprites.push({ k: 'tree', side, offset: side * (1.35 + rand(0, 2.4)), w: rand(700, 1100), h: rand(1700, 2800) });
+      if (n % 14 === 3) for (const side of [-1, 1])
+        s.sprites.push({ k: 'house', side, offset: side * (3 + rand(0, 1.2)), w: 2400, h: 1900, c: pick(BC) });
+    }
+    if (n % 12 === 6) for (const side of [-1, 1]) s.sprites.push({ k: 'lamp', side, offset: side * 1.17, w: 170, h: 2700 });
+  }
+}
+
+function resetTraffic() {
+  segs.forEach(s => { s.cars.length = 0; });
+  cars = [];
+  const per = 30, gap = TL / per;
+  LANE.forEach((ln, li) => {
+    for (let i = 0; i < per; i++) {
+      let z = (i * gap + Math.random() * gap * .6 + 9000 + li * 3700) % TL;
+      if (z < 9000) z += 9000;
+      const c = { z, offset: ln.o, speed: ln.v, t: TT[Math.floor(Math.random() * TT.length)], rel: 0, seg: null };
+      c.seg = segAt(z); c.seg.cars.push(c); cars.push(c);
+    }
+  });
+}
+
+/* ---------- sky ---------- */
+function mkSky() {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H / 2 + 8;
+  const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, c.height);
+  gr.addColorStop(0, '#120e30'); gr.addColorStop(.5, '#5e2a6e'); gr.addColorStop(.8, '#ff5e7e'); gr.addColorStop(1, '#ffb870');
+  g.fillStyle = gr; g.fillRect(0, 0, W, c.height);
+  g.fillStyle = '#ffe3a6'; g.beginPath(); g.arc(W * .7, H / 2 - 14, 26, 0, 6.283); g.fill();
+  g.fillStyle = '#fff'; for (let i = 0; i < 40; i++) g.fillRect(Math.floor(Math.random() * W), Math.floor(Math.random() * 70), 1, 1);
+  return c;
+}
+const skyCv = mkSky();
+const mkLayer = (n, wa, wb, ha, hb) => Array.from({ length: n }, () => ({ w: Math.floor(rand(wa, wb)), h: Math.floor(rand(ha, hb)) }));
+const skyL1 = mkLayer(60, 14, 30, 14, 40), skyL2 = mkLayer(60, 12, 28, 22, 70);
+function skyLayer(arr, col, off) {
+  const total = arr.reduce((a, b) => a + b.w + 2, 0);
+  let x = -(((off % total) + total) % total);
+  ctx.fillStyle = col;
+  while (x < W) {
+    for (const b of arr) {
+      if (x + b.w > 0 && x < W) ctx.fillRect(x, H / 2 + 2 - b.h, b.w, b.h);
+      x += b.w + 2;
+      if (x >= W) break;
+    }
+  }
+}
+
+/* ---------- car drawing (rear view, low-poly) ---------- */
+function pg(c, col, pts) {
+  c.fillStyle = col; c.beginPath(); c.moveTo(pts[0], pts[1]);
+  for (let i = 2; i < pts.length; i += 2) c.lineTo(pts[i], pts[i + 1]);
+  c.closePath(); c.fill();
+}
+function drawCarRear(c, cx, by, w, car, o) {
+  if (w < 2) return;
+  o = o || {};
+  const sh = car._sh || (car._sh = { d: shade(car.color, -.4), l: shade(car.color, .22) });
+  const lean = (o.lean || 0) * w * .03;
+  c.fillStyle = 'rgba(0,0,0,.42)'; c.fillRect(cx - w * .54, by - w * .045, w * 1.08, w * .07);
+  c.fillStyle = '#0c0c11';
+  const ww = w * .17, wh = w * .2;
+  c.fillRect(cx - w * .5, by - wh, ww, wh); c.fillRect(cx + w * .5 - ww, by - wh, ww, wh);
+  const brake = o.brake ? '#ff8090' : '#ff2a3a';
+  if (car.tall) {
+    const th = w * car.th * 1.1, bw = w * .45;
+    c.fillStyle = car.color; c.fillRect(cx - bw, by - w * .12 - th, bw * 2, th);
+    c.fillStyle = sh.d; c.fillRect(cx - bw, by - w * .12 - th, bw * 2, Math.max(1, w * .05));
+    c.fillRect(cx - w * .01, by - w * .12 - th + w * .05, Math.max(1, w * .02), th - w * .05);
+    c.fillStyle = brake;
+    c.fillRect(cx - bw, by - w * .22, w * .1, w * .07); c.fillRect(cx + bw - w * .1, by - w * .22, w * .1, w * .07);
+    return;
+  }
+  const bw = w * .46 * (car.wide || 1);
+  const y0 = by - w * .08, y1 = by - w * .3;
+  c.fillStyle = car.color; c.fillRect(cx - bw, y1, bw * 2, y0 - y1);
+  c.fillStyle = '#14141a'; c.fillRect(cx - bw * .64, y0 - w * .07, bw * 1.28, w * .07);
+  c.fillStyle = '#9aa0ad';
+  c.fillRect(cx - bw * .32, y0 - w * .05, w * .06, w * .035); c.fillRect(cx + bw * .32 - w * .06, y0 - w * .05, w * .06, w * .035);
+  const dh = w * .1 * (car.h || 1), yd = y1 - dh;
+  pg(c, sh.l, [cx - bw * .96, y1, cx - bw * .78 + lean * .4, yd, cx + bw * .78 + lean * .4, yd, cx + bw * .96, y1]);
+  const ch = w * .13 * (car.cab || 1);
+  pg(c, sh.d, [cx - w * .3 + lean * .7, yd, cx - w * .21 + lean, yd - ch, cx + w * .21 + lean, yd - ch, cx + w * .3 + lean * .7, yd]);
+  pg(c, '#0f1726', [cx - w * .25 + lean * .7, yd - w * .008, cx - w * .18 + lean, yd - ch + w * .015, cx + w * .18 + lean, yd - ch + w * .015, cx + w * .25 + lean * .7, yd - w * .008]);
+  c.fillStyle = brake;
+  if (car.bar) c.fillRect(cx - bw * .94, y1 + w * .02, bw * 1.88, Math.max(1, w * .035));
+  else { c.fillRect(cx - bw * .94, y1 + w * .02, bw * .5, Math.max(1, w * .045)); c.fillRect(cx + bw * .44, y1 + w * .02, bw * .5, Math.max(1, w * .045)); }
+  if (car.wing === 2) {
+    const wy = yd - w * .07;
+    c.fillStyle = '#101015'; c.fillRect(cx - bw * .96, wy, bw * 1.92, Math.max(1, w * .035));
+    c.fillRect(cx - w * .27, wy, Math.max(1, w * .02), w * .075); c.fillRect(cx + w * .25, wy, Math.max(1, w * .02), w * .075);
+  } else if (car.wing === 1) {
+    c.fillStyle = sh.d; c.fillRect(cx - bw * .8, yd - w * .012, bw * 1.6, Math.max(1, w * .028));
+  }
+}
+
+/* ---------- game state ---------- */
+let state = 'auth', resumeTo = 'drive';
+let car = CARS[0];
+let position = 0, speed = 0, playerX = 0, trav = 0, dist = 0, bonus = 0, tleft = 0;
+let combo = 0, comboT = 0, nextCP = CP_U, gateSeg = null, gate = null;
+let crashT = 0, invT = 0, countT = 0, finishT = 0, shake = 0, skyX = 0, toastT = 0;
+let passCount = 0, nearCount = 0, crashCount = 0, topSpeed = 0, lastRun = null;
+const keys = {}, tstate = { left: 0, right: 0, up: 0, down: 0 };
+
+const kmh = () => speed / car.max * car.top;
+function getCtrl() {
+  return {
+    up: keys.arrowup || keys.w || tstate.up, down: keys.arrowdown || keys.s || tstate.down,
+    left: keys.arrowleft || keys.a || tstate.left, right: keys.arrowright || keys.d || tstate.right
+  };
+}
+function toast(s, c) { toastEl.textContent = s; toastEl.className = c || ''; toastT = 1.6; }
+
+function placeGate() {
+  if (gateSeg && gate) { const i = gateSeg.sprites.indexOf(gate); if (i >= 0) gateSeg.sprites.splice(i, 1); }
+  gate = { k: 'gate', offset: 0, w: RW * 2.25, h: 3600 };
+  gateSeg = segAt(nextCP % TL);
+  gateSeg.sprites.push(gate);
+}
+
+function startRun() {
+  audioInit();
+  car = carById(user.car);
+  speed = 0; position = 0; playerX = 0; trav = 0; dist = 0; bonus = 0; tleft = START_TIME;
+  combo = 0; comboT = 0; nextCP = CP_U; crashT = 0; invT = 0; shake = 0; finishT = 0;
+  passCount = nearCount = crashCount = 0; topSpeed = 0;
+  resetTraffic(); placeGate();
+  hCar.textContent = car.name;
+  hBest.textContent = num(user.best || 0);
+  countT = 3;
+  go('countdown');
+  beep(440, .15, 'square', .04);
+}
+
+function crash(c) {
+  speed *= .35; invT = 1.5; crashT = .5; shake = .5; combo = 0; comboT = 0; crashCount++;
+  playerX += (playerX >= c.offset ? 1 : -1) * .18;
+  beep(110, .35, 'sawtooth', .08, -70);
+  toast('CRASH', 'bad');
+}
+function passed(lat) {
+  if (lat < .46) {
+    combo = comboT > 0 ? Math.min(5, combo + 1) : 1; comboT = 3;
+    const b = 100 * combo; bonus += b; nearCount++;
+    toast('NEAR MISS x' + combo + '   +' + b, 'ok');
+    beep(900, .08, 'triangle', .04, 300);
+  } else { bonus += 10; passCount++; }
+}
+function interact(dt) {
+  const pz = position + PLAYERZ, thr = CARW / RW * .92;
+  for (const c of cars) {
+    let rel = c.z - pz;
+    if (rel > TL / 2) rel -= TL; else if (rel < -TL / 2) rel += TL;
+    const lat = Math.abs(c.offset - playerX), d = Math.abs(speed - c.speed) * dt;
+    if (invT <= 0 && rel > -100 - d && rel < 110 + d && lat < thr) crash(c);
+    else if (c.rel > 0 && rel <= 0 && Math.abs(rel - c.rel) < 5000 && speed > c.speed) passed(lat);
+    c.rel = rel;
+  }
+}
+function stepTraffic(dt) {
+  for (const c of cars) {
+    c.z += c.speed * dt; if (c.z >= TL) c.z -= TL;
+    const s = segAt(c.z);
+    if (s !== c.seg) { const i = c.seg.cars.indexOf(c); if (i >= 0) c.seg.cars.splice(i, 1); s.cars.push(c); c.seg = s; }
+  }
+}
+function physics(dt, ctrl) {
+  const mx = car.max, sp = speed / mx;
+  const seg = segAt(position + PLAYERZ);
+  position = (position + speed * dt) % TL; trav += speed * dt;
+  const dx = dt * 2.3 * sp;
+  const cf = .3 * (1.25 - car.hnd * .07);
+  if (ctrl.left) playerX -= dx * (.85 + car.hnd * .03);
+  else if (ctrl.right) playerX += dx * (.85 + car.hnd * .03);
+  playerX -= dx * sp * seg.curve * cf;
+  const A = mx / (11 - .8 * car.acc);
+  if (ctrl.up) speed += A * dt * (1.25 - sp) / 1.25; else speed -= mx / 5 * dt;
+  if (ctrl.down) speed -= mx * .9 * dt;
+  if ((playerX < -1 || playerX > 1) && speed > mx / 4) speed -= mx / 2 * dt;
+  if (Math.abs(playerX) > 1.45) { playerX = clamp(playerX, -1.45, 1.45); speed -= mx * .6 * dt; shake = Math.max(shake, .12); }
+  speed = clamp(speed, 0, mx);
+  skyX += seg.curve * sp * dt * 40;
+}
+
+function stepRun(dt) {
+  if (state === 'countdown') {
+    countT -= dt;
+    if (countT <= 0) { state = 'drive'; toast('GO!', 'ok'); beep(880, .3, 'square', .05); }
+  } else if (state === 'drive') {
+    tleft -= dt;
+    if (tleft <= 0) { tleft = 0; state = 'timeup'; finishT = 2.4; toast('TIME UP', 'bad'); }
+  } else if (state === 'timeup') {
+    finishT -= dt;
+    if (finishT <= 0) { finishRun(); return; }
+  }
+  if (state !== 'countdown') physics(dt, state === 'drive' ? getCtrl() : {});
+  stepTraffic(dt);
+  if (state === 'drive') {
+    interact(dt);
+    if (trav >= nextCP) {
+      tleft += CP_BONUS; nextCP += CP_U; placeGate();
+      toast('CHECKPOINT  +' + CP_BONUS + 's', 'ok'); beep(660, .25, 'triangle', .06, 500);
+    }
+  }
+  comboT -= dt; if (comboT <= 0) combo = 0;
+  crashT = Math.max(0, crashT - dt); invT = Math.max(0, invT - dt); shake = Math.max(0, shake - dt);
+  dist = trav / U_PER_M;
+  topSpeed = Math.max(topSpeed, kmh());
+}
+
+function finishRun() {
+  const score = Math.floor(dist) + bonus;
+  const prev = user.best || 0, newBest = score > prev;
+  const medal = MEDALS.find(m => score >= m.s) || null;
+  const pbBonus = newBest ? Math.round(score * .25) : 0;
+  const money = score + (medal ? medal.b : 0) + pbBonus;
+  user.money += money; user.runs = (user.runs || 0) + 1; user.earned = (user.earned || 0) + money;
+  if (newBest) { user.best = score; user.bestCar = car.id; }
+  saveUser();
+  let rank = null;
+  if (!user.guest) rank = leaderboard('score').findIndex(r => r.you) + 1;
+  lastRun = { score, dist, pass: passCount, near: nearCount, crashes: crashCount, top: topSpeed, newBest, medal, pbBonus, money, rank, guest: !!user.guest };
+  engineSet(60, false);
+  go('results');
+}
+
+/* ---------- rendering ---------- */
+function proj(p, camX, camY, camZ) {
+  p.camera.x = -camX; p.camera.y = p.world.y - camY; p.camera.z = p.world.z - camZ;
+  p.screen.scale = CAMD / p.camera.z;
+  p.screen.x = Math.round(W / 2 + p.screen.scale * p.camera.x * W / 2);
+  p.screen.y = Math.round(H / 2 - p.screen.scale * p.camera.y * H / 2);
+  p.screen.w = Math.round(p.screen.scale * RW * W / 2);
+}
+function poly(x1, y1, x2, y2, x3, y3, x4, y4, col) {
+  ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.lineTo(x4, y4); ctx.closePath(); ctx.fill();
+}
+function drawSeg(s) {
+  const a = s.p1.screen, b = s.p2.screen, z = ZC[s.zone];
+  ctx.fillStyle = z.g[s.st]; ctx.fillRect(0, b.y, W, a.y - b.y);
+  const r1 = a.w / Math.max(6, 2 * LANES), r2 = b.w / Math.max(6, 2 * LANES);
+  if (z.w) {
+    const w1 = a.w * .5, w2 = b.w * .5;
+    poly(a.x - a.w - r1 - w1, a.y, a.x - a.w - r1, a.y, b.x - b.w - r2, b.y, b.x - b.w - r2 - w2, b.y, z.w);
+    poly(a.x + a.w + r1, a.y, a.x + a.w + r1 + w1, a.y, b.x + b.w + r2 + w2, b.y, b.x + b.w + r2, b.y, z.w);
+  }
+  poly(a.x - a.w - r1, a.y, a.x - a.w, a.y, b.x - b.w, b.y, b.x - b.w - r2, b.y, RUMB[s.st]);
+  poly(a.x + a.w + r1, a.y, a.x + a.w, a.y, b.x + b.w, b.y, b.x + b.w + r2, b.y, RUMB[s.st]);
+  poly(a.x - a.w, a.y, a.x + a.w, a.y, b.x + b.w, b.y, b.x - b.w, b.y, ROAD[s.st]);
+  if (s.st === 0) {
+    const l1 = a.w / Math.max(32, 8 * LANES), l2 = b.w / Math.max(32, 8 * LANES);
+    const lw1 = a.w * 2 / LANES, lw2 = b.w * 2 / LANES;
+    let lx1 = a.x - a.w + lw1, lx2 = b.x - b.w + lw2;
+    for (let i = 1; i < LANES; i++, lx1 += lw1, lx2 += lw2)
+      poly(lx1 - l1 / 2, a.y, lx1 + l1 / 2, a.y, lx2 + l2 / 2, b.y, lx2 - l2 / 2, b.y, '#e8e8f0');
+  }
+}
+
+function drawSprite(sp, sx, sy, dw, dh, clipY) {
+  if (dw < 1.2 || sx + dw / 2 < 0 || sx - dw / 2 > W) return;
+  const top = sy - dh;
+  let clipped = false;
+  if (sy > clipY) {
+    if (top >= clipY) return;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, clipY); ctx.clip(); clipped = true;
+  }
+  const x0 = sx - dw / 2;
+  switch (sp.k) {
+    case 'bld': {
+      ctx.fillStyle = sp.c; ctx.fillRect(x0, top, dw, dh);
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      const sw = dw * .16; ctx.fillRect(sp.side > 0 ? x0 : x0 + dw - sw, top, sw, dh);
+      ctx.fillStyle = '#1b2135'; ctx.fillRect(x0, top, dw, Math.max(1, dh * .025));
+      if (sp.acc) { ctx.fillStyle = sp.acc; ctx.fillRect(x0, top + dh * .06, dw, Math.max(1, dh * .012)); }
+      if (dw > 12) {
+        const rows = sp.fl, cols = sp.cols, cw = dw / cols, rh = dh * .9 / rows, ww = cw * .5, wh = rh * .45;
+        if (wh >= 1) {
+          if (!sp.lit) {                                  // which windows are lit, decided once per building
+            sp.lit = [];
+            for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+              sp.lit.push((((r * 73856093) ^ (c * 19349663) ^ sp.seed) >>> 0) % 7 < 3);
+          }
+          const wy = top + dh * .07, wx = (cw - ww) / 2, wo = (rh - wh) / 2;
+          for (let pass = 0; pass < 2; pass++) {          // two batched paths: dark windows, then lit ones
+            ctx.fillStyle = pass ? '#ffd987' : '#182036';
+            ctx.beginPath();
+            for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+              if (sp.lit[r * cols + c] === (pass === 1)) ctx.rect(x0 + c * cw + wx, wy + r * rh + wo, ww, wh);
+            ctx.fill();
+          }
+        }
+      }
+      break;
+    }
+    case 'tree':
+      ctx.fillStyle = '#4a3322'; ctx.fillRect(sx - dw * .07, sy - dh * .35, Math.max(1, dw * .14), dh * .35);
+      ctx.fillStyle = '#1f5a30'; ctx.beginPath(); ctx.arc(sx, sy - dh * .62, Math.max(1, dw * .5), 0, 6.283); ctx.fill();
+      ctx.fillStyle = '#2b7a40'; ctx.beginPath(); ctx.arc(sx - dw * .1, sy - dh * .68, Math.max(1, dw * .32), 0, 6.283); ctx.fill();
+      break;
+    case 'house':
+      ctx.fillStyle = sp.c; ctx.fillRect(x0, top + dh * .3, dw, dh * .7);
+      pg(ctx, '#5a2f3a', [x0 - dw * .04, top + dh * .32, sx, top, x0 + dw * 1.04, top + dh * .32]);
+      ctx.fillStyle = '#ffd987'; ctx.fillRect(x0 + dw * .2, top + dh * .55, Math.max(1, dw * .18), Math.max(1, dh * .2));
+      ctx.fillRect(x0 + dw * .62, top + dh * .55, Math.max(1, dw * .18), Math.max(1, dh * .2));
+      break;
+    case 'lamp':
+      ctx.fillStyle = '#9aa2c0'; ctx.fillRect(sx - Math.max(.5, dw * .15), top, Math.max(1, dw * .3), dh);
+      ctx.fillStyle = '#ffe9a8'; ctx.fillRect(sx - dw * 1.2, top, dw * 2.4, Math.max(1, dh * .04));
+      ctx.fillStyle = 'rgba(255,233,168,.25)'; ctx.beginPath(); ctx.arc(sx, top + dh * .02, Math.max(2, dw * 2.6), 0, 6.283); ctx.fill();
+      break;
+    case 'gate': {
+      const pw = Math.max(2, dw * .03), bh = dh * .22, cells = 14, cwid = dw / cells;
+      ctx.fillStyle = '#d8dcf0'; ctx.fillRect(x0, top, pw, dh); ctx.fillRect(x0 + dw - pw, top, pw, dh);
+      for (let i = 0; i < cells; i++) {
+        ctx.fillStyle = i % 2 ? '#ffcc33' : '#14172a'; ctx.fillRect(x0 + i * cwid, top, cwid + .5, bh / 2);
+        ctx.fillStyle = i % 2 ? '#14172a' : '#ffcc33'; ctx.fillRect(x0 + i * cwid, top + bh / 2, cwid + .5, bh / 2);
+      }
+      break;
+    }
+  }
+  if (clipped) ctx.restore();
+}
+
+function render(sp) {
+  ctx.drawImage(skyCv, 0, 0);
+  skyLayer(skyL1, '#4a2f6a', skyX * .35);
+  skyLayer(skyL2, '#2d2150', skyX * .7);
+  ctx.fillStyle = '#232842'; ctx.fillRect(0, H / 2 + 2, W, H / 2);
+
+  const base = segAt(position), basePct = (position % SEG) / SEG;
+  const pz = position + PLAYERZ, pSeg = segAt(pz), pPct = (pz % SEG) / SEG;
+  const py = lerp(pSeg.p1.world.y, pSeg.p2.world.y, pPct);
+  let maxy = H, x = 0, dx = -(base.curve * basePct);
+
+  for (let n = 0; n < DRAW; n++) {
+    const s = segs[(base.index + n) % segs.length];
+    const looped = s.index < base.index, cz = position - (looped ? TL : 0);
+    s.clip = maxy;
+    proj(s.p1, playerX * RW - x, py + CAMH, cz);
+    proj(s.p2, playerX * RW - x - dx, py + CAMH, cz);
+    x += dx; dx += s.curve;
+    if (s.p1.camera.z <= CAMD || s.p2.screen.y >= s.p1.screen.y || s.p2.screen.y >= maxy) continue;
+    drawSeg(s);
+    maxy = s.p1.screen.y;
+  }
+
+  for (let n = DRAW - 1; n >= 0; n--) {
+    const s = segs[(base.index + n) % segs.length];
+    if (s.p1.camera.z <= CAMD) continue;
+    for (const c of s.cars) {
+      const pct = (c.z % SEG) / SEG;
+      const sc = lerp(s.p1.screen.scale, s.p2.screen.scale, pct);
+      const sx = lerp(s.p1.screen.x, s.p2.screen.x, pct) + sc * c.offset * RW * W / 2;
+      const sy = lerp(s.p1.screen.y, s.p2.screen.y, pct);
+      const dw = sc * CARW * W / 2;
+      if (dw < 2 || sx + dw < 0 || sx - dw > W) continue;
+      if (sy > s.clip) { ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, s.clip); ctx.clip(); drawCarRear(ctx, sx, sy, dw, c.t, {}); ctx.restore(); }
+      else drawCarRear(ctx, sx, sy, dw, c.t, {});
+    }
+    const sc = s.p1.screen.scale;
+    for (const spr of s.sprites) {
+      const sx = s.p1.screen.x + sc * spr.offset * RW * W / 2;
+      drawSprite(spr, sx, s.p1.screen.y, sc * spr.w * W / 2, sc * spr.h * W / 2, s.clip);
+    }
+  }
+
+  // player
+  if (!(invT > 0 && Math.floor(performance.now() / 70) % 2 === 0 && state === 'drive')) {
+    const pw = (CAMD / PLAYERZ) * CARW * W / 2;
+    const bounce = Math.sin(performance.now() / 45) * sp * .9;
+    const ctrl = getCtrl();
+    const lean = (state === 'drive' || state === 'countdown') ? (ctrl.right ? 1 : 0) - (ctrl.left ? 1 : 0) : 0;
+    drawCarRear(ctx, W / 2, H - 16 + bounce, pw, car, { lean: lean * sp, brake: !!ctrl.down && state === 'drive' });
+  }
+}
+
+/* ---------- HUD ---------- */
+const hc = {};
+function setTxt(node, key, v) { if (hc[key] !== v) { hc[key] = v; node.textContent = v; } }
+function updateHUD() {
+  const sp = speed / car.max;
+  setTxt(hTime, 't', String(Math.ceil(tleft)));
+  hTime.className = tleft < 10 && state === 'drive' ? 'low' : '';
+  setTxt(hScore, 's', num(Math.floor(dist) + bonus));
+  setTxt(hDist, 'd', (dist / 1000).toFixed(1));
+  setTxt(hSpd, 'v', String(Math.round(kmh())));
+  const gb = Math.min(5.999, sp * 6);
+  setTxt(hGear, 'g', String(Math.floor(gb) + 1));
+  hRpm.style.width = ((gb - Math.floor(gb)) * 100).toFixed(0) + '%';
+  setTxt(hCombo, 'c', combo > 1 ? 'COMBO x' + combo : '');
+  bigEl.textContent = state === 'countdown' ? String(Math.max(1, Math.ceil(countT))) : '';
+  toastEl.style.opacity = toastT > 0 ? Math.min(1, toastT * 2.5) : 0;
+  return gb;
+}
+
+/* ---------- UI screens ---------- */
+function go(s) {
+  state = s;
+  hud.hidden = !(s === 'countdown' || s === 'drive' || s === 'timeup' || s === 'paused');
+  touchEl.hidden = !(isTouch && (s === 'drive' || s === 'countdown' || s === 'timeup'));
+  ui.innerHTML = '';
+  if (s === 'auth') renderAuth();
+  else if (s === 'menu') renderMenu();
+  else if (s === 'garage') renderGarage();
+  else if (s === 'casino') renderCasino();
+  else if (s === 'board') renderBoard();
+  else if (s === 'paused') renderPause();
+  else if (s === 'results') renderResults(lastRun);
+}
+
+function renderAuth() {
+  ui.innerHTML = `<div class="screen"><div class="panel" style="width:26em">
+    <h1>SUPERCITY<small>DRIVE</small></h1>
+    <div class="tabs"><button class="tab on" data-m="login">Log in</button><button class="tab" data-m="reg">Create account</button></div>
+    <input id="au" placeholder="Username" maxlength="16" autocomplete="username" spellcheck="false">
+    <input id="ap" type="password" placeholder="Password" autocomplete="current-password" style="margin-top:.6em">
+    <button class="btn pri" id="ago" style="width:100%;margin-top:.8em">LOG IN</button>
+    <div class="msg" id="amsg"></div>
+    <button class="btn ghost" id="agu" style="width:100%">Play as guest (progress isn't saved)</button>
+    <div class="dim small" style="margin-top:.8em;text-align:center">Accounts are stored in this browser only.</div>
+  </div></div>`;
+  let mode = 'login';
+  const u = q('#au'), p = q('#ap'), go1 = q('#ago'), msg = q('#amsg');
+  ui.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    mode = t.dataset.m;
+    ui.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+    go1.textContent = mode === 'login' ? 'LOG IN' : 'CREATE ACCOUNT';
+    p.autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+    msg.textContent = '';
+  }));
+  const submit = async () => {
+    msg.textContent = '';
+    go1.disabled = true;
+    const r = mode === 'login' ? await login(u.value, p.value) : await register(u.value, p.value);
+    go1.disabled = false;
+    if (r.err) { msg.textContent = r.err; return; }
+    user = r.user; go('menu');
+  };
+  go1.addEventListener('click', submit);
+  [u, p].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); }));
+  q('#agu').addEventListener('click', () => { user = guestUser(); go('menu'); });
+  u.focus();
+}
+
+function renderMenu() {
+  car = carById(user.car);
+  ui.innerHTML = `<div class="screen"><div class="panel" style="width:24em;text-align:center">
+    <h1>SUPERCITY<small>DRIVE</small></h1>
+    <div class="who"><b>${esc(user.name)}</b>${user.guest ? ' <span class="dim">(guest)</span>' : ''}</div>
+    <div class="row2"><span>CASH <b class="gold">${fmt(user.money)}</b></span><span>BEST <b>${num(user.best || 0)}</b></span></div>
+    <div class="dim" style="margin:.4em 0 .9em">Car: ${esc(car.name)}</div>
+    <button class="btn pri big" id="mDrive">DRIVE</button>
+    <div class="grid2"><button class="btn" id="mGar">GARAGE</button><button class="btn" id="mCas">CASINO</button><button class="btn" id="mBrd">RANKS</button></div>
+    <button class="btn ghost" id="mOut">${user.guest ? 'Back to sign in' : 'Log out'}</button>
+    <div class="dim small" style="margin-top:.8em">&uarr;/W gas &middot; &darr;/S brake &middot; &larr;&rarr;/AD steer &middot; P pause &middot; M mute</div>
+  </div></div>`;
+  q('#mDrive').addEventListener('click', startRun);
+  q('#mGar').addEventListener('click', () => go('garage'));
+  q('#mCas').addEventListener('click', () => go('casino'));
+  q('#mBrd').addEventListener('click', () => go('board'));
+  q('#mOut').addEventListener('click', () => { LS.set(SESSK, ''); user = null; go('auth'); });
+}
+
+function renderGarage() {
+  const stat = (l, v) => `<div class="st"><span>${l}</span><i><u style="width:${v * 10}%"></u></i></div>`;
+  const cards = CARS.map(c => {
+    const own = user.owned.includes(c.id), sel = user.car === c.id;
+    const dis = sel || (!own && user.money < c.price);
+    return `<div class="card${sel ? ' sel' : ''}"><canvas width="96" height="54" data-id="${c.id}"></canvas>
+      <div class="cn">${esc(c.name)}</div>
+      <div class="cs">${c.top} km/h &middot; 0-100 ${c.z100.toFixed(1)}s</div>${stat('ACC', c.acc)}${stat('HND', c.hnd)}
+      <button class="btn${own && !sel ? ' pri' : ''}" data-id="${c.id}" ${dis ? 'disabled' : ''}>${sel ? 'SELECTED' : own ? 'SELECT' : 'BUY ' + fmt(c.price)}</button></div>`;
+  }).join('');
+  ui.innerHTML = `<div class="screen"><div class="panel wide">
+    <div class="top"><h2>GARAGE</h2><div>CASH <b class="gold">${fmt(user.money)}</b></div><button class="btn" id="back">BACK</button></div>
+    <div class="grid">${cards}</div>
+    <div class="dim small" style="margin-top:.6em">Speeds and 0-100 times are approximate real-world figures. ACC/HND are game ratings.</div>
+  </div></div>`;
+  ui.querySelectorAll('canvas[data-id]').forEach(cn => {
+    const g = cn.getContext('2d'), c = carById(cn.dataset.id);
+    const gr = g.createLinearGradient(0, 0, 0, 54); gr.addColorStop(0, '#1b1740'); gr.addColorStop(1, '#3b2a5c');
+    g.fillStyle = gr; g.fillRect(0, 0, 96, 54);
+    g.fillStyle = '#4a4f66'; g.fillRect(0, 40, 96, 14);
+    drawCarRear(g, 48, 50, 64, c, {});
+  });
+  ui.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('click', () => {
+    const c = carById(b.dataset.id);
+    if (!user.owned.includes(c.id)) {
+      if (user.money < c.price) return;
+      user.money -= c.price; user.owned.push(c.id); beep(700, .2, 'triangle', .06, 500);
+    }
+    user.car = c.id; saveUser(); renderGarage();
+  }));
+  q('#back').addEventListener('click', () => go('menu'));
+}
+
+/* casino: pure logic first so it can be tested */
+function coinFlip() {
+  try { const a = new Uint32Array(1); crypto.getRandomValues(a); return (a[0] & 1) === 1; } catch (e) { return Math.random() < .5; }
+}
+function placeBet(bet) {
+  bet = Math.floor(bet);
+  if (!(bet >= 10)) return { err: 'Minimum bet is $10' };
+  if (bet > user.money) return { err: 'Not enough cash' };
+  const win = coinFlip();
+  user.money += win ? bet : -bet;
+  if (win) user.cWins = (user.cWins || 0) + 1; else user.cLosses = (user.cLosses || 0) + 1;
+  user.cNet = (user.cNet || 0) + (win ? bet : -bet);
+  saveUser();
+  return { win, bet };
+}
+let flipping = false;
+function renderCasino() {
+  ui.innerHTML = `<div class="screen"><div class="panel casino">
+    <h2>CASINO</h2>
+    <div class="dim small">Double or lose. Fair 50/50. Virtual cash only.</div>
+    <div class="bal">CASH <b class="gold" id="cBal">${fmt(user.money)}</b></div>
+    <div class="coinbox"><div class="coin" id="coin">&#9733;</div></div>
+    <div class="res" id="cRes">&nbsp;</div>
+    <input id="cBet" type="number" min="10" step="10" value="${Math.max(10, Math.min(user.money, 500))}">
+    <div class="chips"><button class="btn" data-f=".1">10%</button><button class="btn" data-f=".25">25%</button><button class="btn" data-f=".5">50%</button><button class="btn" data-f="1">ALL IN</button></div>
+    <button class="btn pri big" id="cFlip">DOUBLE OR LOSE</button>
+    <div class="dim small" id="cStats" style="margin:.6em 0"></div>
+    <button class="btn ghost" id="back">BACK</button>
+  </div></div>`;
+  const bet = q('#cBet'), coin = q('#coin'), res = q('#cRes'), bal = q('#cBal'), flipBtn = q('#cFlip'), stats = q('#cStats');
+  const showStats = () => {
+    const net = user.cNet || 0;
+    stats.textContent = 'Record ' + (user.cWins || 0) + 'W - ' + (user.cLosses || 0) + 'L   |   Net ' + (net >= 0 ? '+' : '-') + fmt(Math.abs(net));
+  };
+  showStats();
+  ui.querySelectorAll('.chips .btn').forEach(b => b.addEventListener('click', () => { bet.value = Math.max(10, Math.floor(user.money * parseFloat(b.dataset.f))); }));
+  flipBtn.addEventListener('click', () => {
+    if (flipping) return;
+    const r = placeBet(+bet.value || 0);
+    if (r.err) { res.className = 'res bad'; res.textContent = r.err; return; }
+    flipping = true; res.textContent = ''; coin.textContent = '?';
+    coin.classList.remove('spin'); void coin.offsetWidth; coin.classList.add('spin');
+    beep(500, .9, 'triangle', .03, 400);
+    setTimeout(() => {
+      flipping = false;
+      if (state !== 'casino') return;
+      coin.textContent = r.win ? '2x' : 'X';
+      res.className = 'res ' + (r.win ? 'ok' : 'bad');
+      res.textContent = r.win ? 'WIN  +' + fmt(r.bet) : 'LOSE  -' + fmt(r.bet);
+      bal.textContent = fmt(user.money); showStats();
+      beep(r.win ? 880 : 150, .3, r.win ? 'triangle' : 'sawtooth', .06, r.win ? 400 : -60);
+      if (user.money < 10) { res.className = 'res bad'; res.textContent += '  - broke! Go drive to earn more.'; }
+    }, 1250);
+  });
+  q('#back').addEventListener('click', () => { if (!flipping) go('menu'); });
+}
+
+function renderBoard() {
+  let kind = 'score';
+  const draw = () => {
+    const rows = leaderboard(kind).slice(0, 10);
+    const body = rows.map((r, i) => `<tr class="${r.you ? 'you' : ''}${r.cpu ? ' cpu' : ''}"><td>${i + 1}</td><td>${esc(r.name)}${r.cpu ? ' <span class="dim small">CPU</span>' : ''}</td>
+      <td>${kind === 'score' ? esc(carById(r.car).name) : ''}</td><td>${kind === 'score' ? num(r.score) : fmt(r.money)}</td></tr>`).join('');
+    ui.innerHTML = `<div class="screen"><div class="panel" style="width:36em">
+      <div class="top"><h2>LEADERBOARD</h2><button class="btn" id="back">BACK</button></div>
+      <div class="tabs"><button class="tab ${kind === 'score' ? 'on' : ''}" data-k="score">Best score</button><button class="tab ${kind === 'money' ? 'on' : ''}" data-k="money">Richest</button></div>
+      <table class="tbl"><tr><th>#</th><th>Driver</th><th>${kind === 'score' ? 'Car' : ''}</th><th style="text-align:right">${kind === 'score' ? 'Score' : 'Cash'}</th></tr>${body}</table>
+      <div class="dim small">${user.guest ? 'Guests aren\'t ranked. Create an account to get on the board. ' : ''}Ranks cover accounts on this browser, plus CPU rivals to chase.</div>
+    </div></div>`;
+    q('#back').addEventListener('click', () => go('menu'));
+    ui.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => { kind = t.dataset.k; draw(); }));
+  };
+  draw();
+}
+
+function renderPause() {
+  ui.innerHTML = `<div class="screen"><div class="panel" style="width:20em;text-align:center">
+    <h2>PAUSED</h2>
+    <button class="btn pri big" id="pRes" style="margin:.8em 0 .5em">RESUME</button>
+    <button class="btn" id="pQuit" style="width:100%">Quit run (no payout)</button>
+  </div></div>`;
+  q('#pRes').addEventListener('click', togglePause);
+  q('#pQuit').addEventListener('click', () => { engineSet(60, false); go('menu'); });
+}
+
+function renderResults(r) {
+  const row = (a, b) => `<tr><td>${a}</td><td>${b}</td></tr>`;
+  ui.innerHTML = `<div class="screen"><div class="panel" style="width:27em">
+    <h2 style="text-align:center">RUN COMPLETE</h2>
+    <div class="big2">${num(r.score)}<small>SCORE</small></div>
+    ${r.newBest ? '<div class="badge">NEW PERSONAL BEST!</div>' : ''}
+    ${r.medal ? `<div class="medal" style="color:${r.medal.c}">${r.medal.n} MEDAL</div>` : '<div class="dim small" style="text-align:center">No medal (bronze at 3,000)</div>'}
+    <table class="tbl">
+      ${row('Distance', num(r.dist) + ' m')}${row('Passes / near misses', r.pass + ' / ' + r.near)}
+      ${row('Top speed', Math.round(r.top) + ' km/h')}${row('Crashes', r.crashes)}
+      ${r.rank ? row('Leaderboard rank', '#' + r.rank) : ''}
+    </table>
+    <table class="tbl">
+      ${row('Score payout', fmt(r.score))}
+      ${r.medal ? row(r.medal.n + ' bonus', '+' + fmt(r.medal.b)) : ''}
+      ${r.newBest ? row('Personal best bonus', '+' + fmt(r.pbBonus)) : ''}
+      <tr class="tot"><td>TOTAL EARNED</td><td>${fmt(r.money)}</td></tr>
+    </table>
+    ${r.guest ? '<div class="dim small">Guest progress is lost when you close the tab. Create an account to keep it.</div>' : ''}
+    <div class="grid2" style="margin-top:.8em"><button class="btn pri" id="rAgain">DRIVE AGAIN</button><button class="btn" id="rGar">GARAGE</button><button class="btn" id="rMenu">MENU</button></div>
+  </div></div>`;
+  q('#rAgain').addEventListener('click', startRun);
+  q('#rGar').addEventListener('click', () => go('garage'));
+  q('#rMenu').addEventListener('click', () => go('menu'));
+}
+
+/* ---------- input ---------- */
+function togglePause() {
+  if (state === 'drive' || state === 'countdown') { resumeTo = state; go('paused'); engineSet(60, false); }
+  else if (state === 'paused') { state = resumeTo; ui.innerHTML = ''; hud.hidden = false; touchEl.hidden = !isTouch; }
+}
+addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' '].includes(k)) e.preventDefault();
+  keys[k] = true;
+  if (k === 'p') togglePause();
+  if (k === 'escape') {
+    if (state === 'drive' || state === 'countdown' || state === 'paused') togglePause();
+    else if ((state === 'garage' || state === 'casino' || state === 'board') && !flipping) go('menu');
+  }
+  if (k === 'm') { muted = !muted; if (muted) engineSet(60, false); }
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; if (state === 'drive' || state === 'countdown') togglePause(); });
+touchEl.querySelectorAll('button').forEach(b => {
+  const k = b.dataset.k;
+  const on = e => { e.preventDefault(); tstate[k] = 1; }, off = e => { e.preventDefault(); tstate[k] = 0; };
+  b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off);
+  b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+});
+
+/* ---------- main loop ---------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const running = state === 'countdown' || state === 'drive' || state === 'timeup';
+  let sp;
+  if (running) {
+    stepRun(dt);
+    sp = speed / car.max;
+  } else if (state !== 'paused') {                       // menu backdrop: cruise through the city
+    speed = 3600; sp = speed / car.max;
+    position = (position + speed * dt) % TL;
+    playerX = Math.sin(now / 2200) * .3;
+    skyX += segAt(position + PLAYERZ).curve * sp * dt * 40;
+    stepTraffic(dt);
+    invT = 0;
+  } else sp = speed / car.max;
+  if (toastT > 0) toastT -= dt;
+  ctx.save();
+  if (shake > 0) ctx.translate(Math.round(rand(-1, 1) * shake * 6), Math.round(rand(-1, 1) * shake * 6));
+  render(sp);
+  ctx.restore();
+  if (running || state === 'paused') {
+    const gb = updateHUD();
+    engineSet(55 + Math.floor(gb) * 14 + (gb - Math.floor(gb)) * 110, running && state !== 'countdown' || state === 'countdown');
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- boot ---------- */
+buildTrack();
+populate();
+resetTraffic();
+(function boot() {
+  const sn = LS.get(SESSK);
+  if (sn && db.users[sn]) { user = db.users[sn]; if (!user.owned || !user.owned.length) user.owned = ['gt3rs']; go('menu'); }
+  else go('auth');
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
